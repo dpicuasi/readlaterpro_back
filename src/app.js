@@ -54,6 +54,9 @@ app.use(
 );
 
 app.use('/api', routes);
+
+// Healthcheck directo — responde aunque MongoDB no esté listo
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.use(notFoundHandler);
 app.use(errorHandler);
 
