@@ -1,0 +1,82 @@
+schema: spec-driven
+
+context: |
+  # ReadLaterPro — Backend
+
+  ## Descripción
+  API REST para una app móvil que guarda links con extracción automática de metadatos.
+  El usuario pega una URL y el backend devuelve título, resumen, imagen, favicon, dominio y sourceType.
+
+  ## Stack
+  - Runtime: Node.js + Express.js
+  - Base de datos: MongoDB (local dev) → MongoDB Atlas free tier (producción)
+  - ODM: Mongoose
+  - Scraping: Axios + Cheerio (OG tags primero, fallback a <title>)
+  - Auth: JWT stateless (7 días) — header Authorization: Bearer <token>
+  - IA (próxima fase): OpenRouter free tier — mistral-7b-instruct:free via openrouterService.js
+  - Deploy objetivo: Railway (free 500h/mes)
+
+  ## Estructura de carpetas
+  src/
+    config/        — database.js, env.js
+    models/        — User.js, Link.js, Collection.js
+    controllers/   — authController, linkController, collectionController, notificationController
+    services/      — authService, linkService, collectionService, metadataService, notificationService, openrouterService (pendiente)
+    routes/        — index.js, authRoutes, linkRoutes, collectionRoutes, notificationRoutes
+    middlewares/   — authMiddleware, asyncHandler, errorHandler, notFoundHandler, validateRequest
+    jobs/          — priorityReminderJob.js (cron diario 09:00)
+    utils/         — AppError.js, jwt.js
+
+  ## API implementada
+  Auth:    POST /api/auth/register | POST /api/auth/login | GET /api/auth/me
+  Links:   GET/POST /api/links | GET/PATCH/DELETE /api/links/:id | POST /api/links/:id/reprocess
+  Collections: GET/POST /api/collections | GET/PATCH/DELETE /api/collections/:id
+  Notifications: POST /api/notifications/push-token | DELETE /api/notifications/push-token
+  Health: GET /api/health
+
+  ## Modelo Link — campos clave
+  status: 'pending' | 'read'
+  priority: 'high' | 'medium' | 'low'
+  isFavorite: Boolean
+  sourceType: String enum (github, twitter, youtube, reddit, medium, web, other)
+  processingStatus: 'idle' | 'processing' | 'done' | 'error'  ← próxima fase
+  tags: [String] — normalizados a lowercase
+  notes: String
+  collectionId: ObjectId → Collection
+  estimatedReadTime: Number (minutos)
+
+  ## Modelo User — campos clave
+  expoPushTokens: [String]
+  lastPriorityReminderAt: Date
+
+  ## Convenciones de código
+  - Todos los controllers usan asyncHandler (no try/catch manual)
+  - Errores lanzados con AppError(mensaje, statusCode)
+  - Rutas protegidas con authGuard middleware
+  - Validación de body con validateRequest + express-validator
+  - PATCH para actualizaciones parciales (no PUT)
+  - Variables de entorno centralizadas en src/config/env.js
+  - Rate limiting: 200 req/15min global
+
+  ## Estado actual completado
+  - CRUD Links con scraping automático + reprocess endpoint
+  - CRUD Collections con populate en listLinks
+  - Auth JWT completo
+  - Push notifications: registro token, cron diario recordatorio alta prioridad 3+ días
+  - Modo oscuro: no aplica al backend
+
+  ## Próximas fases
+  FASE 1: openrouterService.js — LLM async en background si resumen < 80 chars; campo processingStatus en Link
+  FASE 2: Deploy Railway + MongoDB Atlas; checklist seguridad prod
+  FASE 3: Límites Free/Pro + Stripe; export colección como Markdown GET /collections/:id/export
+
+rules:
+  proposal:
+    - Especificar siempre qué endpoints cambian o se crean nuevos
+    - Indicar cambios en modelos Mongoose con los tipos exactos
+    - Incluir sección "Impacto en frontend" cuando el cambio afecte contratos de API
+    - No-goals explícitos: qué NO entra en este cambio
+  tasks:
+    - Una tarea = un archivo o una función (máx. 2h de trabajo)
+    - Ordenar tareas respetando dependencias (modelo → servicio → controller → ruta)
+    - Incluir tarea de testing manual al final de cada change
