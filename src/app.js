@@ -57,11 +57,15 @@ app.use('/api', routes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-const start = async () => {
-  await connectDB();
-  schedulePriorityReminderJob();
+const start = () => {
+  // Levanta el servidor primero para que el healthcheck de Railway responda de inmediato
   app.listen(env.port, () => {
     logger.info(`ReadLaterPro API escuchando en http://localhost:${env.port}`);
+  });
+
+  // Conecta a MongoDB en background — si falla, reintenta pero no bloquea el servidor
+  connectDB().then(() => {
+    schedulePriorityReminderJob();
   });
 };
 
