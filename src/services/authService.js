@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const User = require('../models/User');
 const AppError = require('../utils/AppError');
+const env = require('../config/env');
 const { signToken, signRefreshToken, verifyToken } = require('../utils/jwt');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email');
 
@@ -97,7 +98,7 @@ const login = async ({ email, password }) => {
     throw new AppError('La cuenta está inactiva', 403);
   }
 
-  if (!user.isEmailVerified) {
+  if (!user.isEmailVerified && env.nodeEnv !== 'development') {
     throw new AppError('Debes verificar tu email antes de iniciar sesión', 401);
   }
 
