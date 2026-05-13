@@ -12,6 +12,18 @@ const linkSchema = new mongoose.Schema(
       type: String,
       required: [true, 'La URL es requerida'],
       trim: true,
+      validate: {
+        validator: function (value) {
+          if (!value) return false;
+          try {
+            const url = new URL(value);
+            return ['http:', 'https:'].includes(url.protocol);
+          } catch {
+            return false;
+          }
+        },
+        message: 'URL inválida. Debe ser una URL válida con protocolo http:// o https://',
+      },
     },
     title: {
       type: String,

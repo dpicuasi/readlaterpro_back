@@ -46,6 +46,15 @@ router
     linkController.createLink
   );
 
+router.get('/ai-quota', linkController.getAIQuota);
+
+router.get(
+  '/:id/status',
+  objectIdParam(),
+  validateRequest,
+  linkController.getLinkStatus
+);
+
 router
   .route('/:id')
   .get(objectIdParam(), validateRequest, linkController.getLink)
@@ -80,7 +89,5 @@ router.post(
   validateRequest,
   linkController.generateAISummary
 );
-
-router.get('/ai-quota', linkController.getAIQuota);
 
 module.exports = router;

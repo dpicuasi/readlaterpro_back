@@ -38,6 +38,11 @@ const reprocessLink = asyncHandler(async (req, res) => {
   res.json({ link });
 });
 
+const getLinkStatus = asyncHandler(async (req, res) => {
+  const link = await linkService.getLinkStatus(req.user._id, req.params.id);
+  res.json({ link });
+});
+
 const generateAISummary = asyncHandler(async (req, res) => {
   const { aiSummary, quotaInfo } = await aiSummaryService.generateForLink(
     req.user._id,
@@ -55,6 +60,7 @@ module.exports = {
   createLink,
   listLinks,
   getLink,
+  getLinkStatus,
   updateLink,
   deleteLink,
   reprocessLink,

@@ -20,7 +20,7 @@ const ensureCollectionBelongsToUser = async (collectionId, userId) => {
 
 const buildFilters = (userId, query) => {
   const filters = { userId };
-  const { status, priority, sourceType, collectionId, tag, search, favorite } = query;
+  const { status, priority, sourceType, collectionId, tag, search, favorite, dateFilter } = query;
 
   if (status) filters.status = status;
   if (priority) filters.priority = priority;
@@ -33,6 +33,27 @@ const buildFilters = (userId, query) => {
   if (tag) filters.tags = tag.toLowerCase();
   if (favorite !== undefined) {
     filters.isFavorite = favorite === 'true' || favorite === true;
+  }
+
+  if (dateFilter) {
+    const now = new Date();
+    let startDate;
+    switch (dateFilter) {
+      case 'today':
+        startDate = new Date(now.setHours(0, 0, 0, 0));
+        break;
+      case 'week':
+        startDate = new Date(now.setDate(now.getDate() - 7));
+        break;
+      case 'month':
+        startDate = new Date(now.setMonth(now.getMonth() - 1));
+        break;
+      default:
+        break;
+    }
+    if (startDate) {
+      filters.createdAt = { $gte: startDate };
+    }
   }
 
   if (search) {
@@ -180,6 +201,22 @@ const listLinks = async (userId, query) => {
   };
 };
 
+const getLinkStatus = async (userId, linkId) => {
+  const doc = await Link.findOne(
+    { _id: linkId, userId },
+    'processingStatus title summary tags imageUrl favicon domain sourceType estimatedReadTime'
+  ).populate('collectionId', 'name color');
+
+  if (!doc) {
+    throw new AppError('Link no encontrado', 404);
+  }
+
+  const link = doc.toObject();
+  link.collection = link.collectionId ?? null;
+  delete link.collectionId;
+  return link;
+};
+
 const getLink = async (userId, linkId) => {
   const doc = await Link.findOne({ _id: linkId, userId }).populate(
     'collectionId',
@@ -288,6 +325,7 @@ const reprocessLink = async (userId, linkId) => {
 module.exports = {
   createLink,
   listLinks,
+  getLinkStatus,
   getLink,
   updateLink,
   deleteLink,

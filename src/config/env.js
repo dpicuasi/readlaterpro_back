@@ -27,6 +27,14 @@ const config = {
     priorityCron: process.env.NOTIFICATIONS_PRIORITY_CRON || '0 15 * * *',
     timezone: process.env.NOTIFICATIONS_TZ || 'UTC',
   },
+  email: {
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: process.env.EMAIL_PORT || 587,
+    secure: process.env.EMAIL_SECURE === 'true',
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+    from: process.env.EMAIL_FROM || 'noreply@readlaterpro.com',
+  },
 };
 
 module.exports = config;

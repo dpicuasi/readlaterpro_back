@@ -43,6 +43,33 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    refreshToken: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: {
+      type: String,
+      select: false,
+      default: null,
+    },
+    emailVerificationExpires: {
+      type: Date,
+      default: null,
+    },
+    passwordResetToken: {
+      type: String,
+      select: false,
+      default: null,
+    },
+    passwordResetExpires: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -65,7 +92,6 @@ userSchema.methods.toJSON = function () {
   return obj;
 };
 
-userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ isActive: 1 });
 
 module.exports = mongoose.model('User', userSchema);
